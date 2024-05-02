@@ -27,5 +27,55 @@ fun AporteListScreen(
     onVerAporte: (AporteEntity) -> Unit,
     onDeleteAporte: (AporteEntity) -> Unit
 ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(4.dp)
+    ) {
+        Row( //Encabezados de la lista
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            //Text(text = "ID", modifier = Modifier.weight(0.10f))
+            //Text(text = "Fecha", modifier = Modifier.weight(0.40f))
+            Text(text = "Persona", modifier = Modifier.weight(0.300f))
+            Text(text = "Monto", modifier = Modifier.weight(0.25f))
+            Text(text = "Observación", modifier = Modifier.weight(0.40f))
+            Spacer(modifier = Modifier.weight(0.05f)) // Espacio adicional para el icono de basura
+        }
 
+        Divider() // Línea divisoria entre los títulos y los elementos de la lista
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            items(aportes) { aporte ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onVerAporte(aporte) }
+                        .padding(16.dp)
+                ) {
+                    //Text(text = aporte.aporteId.toString(), modifier = Modifier.weight(0.10f))
+                    //Text(text = aporte.fecha.toString(), modifier = Modifier.weight(0.400f))
+                    Text(text = aporte.persona.toString(), modifier = Modifier.weight(0.395f))
+                    Text(text = aporte.monto.toString(), modifier = Modifier.weight(0.35f))
+                    Text(text = aporte.observacion.toString(), modifier = Modifier.weight(0.40f))
+
+                    IconButton(
+                        onClick = { onDeleteAporte(aporte)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Ticket"
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
