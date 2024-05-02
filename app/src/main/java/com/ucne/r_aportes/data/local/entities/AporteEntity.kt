@@ -6,9 +6,9 @@ import java.time.LocalDate
 
 @Entity(tableName = "Aportes")
 data class AporteEntity(
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey
     val aporteId: Int? = null,
-    var fecha: LocalDate? = LocalDate.now(),
+    var fecha: String? = "",
     var persona: String? = "",
     var observacion: String? = "",
     var monto: Double? = 0.0
