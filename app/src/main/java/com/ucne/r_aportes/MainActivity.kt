@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,23 +19,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerFormatter
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -57,7 +51,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
     private lateinit var aporteDb: AporteDb
@@ -92,7 +85,7 @@ class MainActivity : ComponentActivity() {
 
                         var persona by remember { mutableStateOf("") }
                         var observacion by remember { mutableStateOf("") }
-                        var monto by remember { mutableDoubleStateOf(0.0) }
+                        var monto by remember { mutableStateOf<Double?>(null) }
                         var aporteId by remember { mutableStateOf("") }
                         var fecha by remember { mutableStateOf(LocalDate.now()) }
 
@@ -122,7 +115,7 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
                                     },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth().clickable(onClick = {showDatePicker = true})
                                 )
 
                                 OutlinedTextField(
@@ -153,9 +146,9 @@ class MainActivity : ComponentActivity() {
 
                                 OutlinedTextField(
                                     label = { Text(text = "Monto") },
-                                    value = monto.toString(),
+                                    value = monto.toString().replace("null", ""),
                                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                                    onValueChange = { monto = it.toDouble() },
+                                    onValueChange = { monto = it.toDoubleOrNull() },
                                     trailingIcon = {
                                         Icon(
                                             painter = painterResource(id = R.drawable.icons8dollarblack),
@@ -175,7 +168,7 @@ class MainActivity : ComponentActivity() {
                                             aporteId = ""
                                             persona = ""
                                             observacion = ""
-                                            monto = 0.0
+                                            monto = null
                                             fecha = LocalDate.now()
                                         }
                                     ) {
@@ -199,7 +192,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                                 persona = ""
                                                 observacion = ""
-                                                monto = 0.0
+                                                monto = null
                                                 fecha = LocalDate.now()
                                             }
                                             //showDialog = true
@@ -243,6 +236,7 @@ class MainActivity : ComponentActivity() {
                                     fecha = selectedDate
                                 }, year, month, day
                             )
+                            datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
                             datePickerDialog.show()
                             showDatePicker = false
                         }
@@ -260,10 +254,10 @@ class MainActivity : ComponentActivity() {
         this.aporte.observacion = ""
     }
 
-    private fun validar(persona: String, monto: Double): Boolean {
+    private fun validar(persona: String, monto: Double?): Boolean {
         val regex = Regex("[a-zA-Z ]+") //para que persona no acepte digitos
         var pass = false
-        if(persona.isNotEmpty() && monto > 0){
+        if(persona.isNotEmpty() && monto!! >= 1){
             if(persona.matches(regex)){
                 pass = true
                 notification("Guardado con éxito!")
