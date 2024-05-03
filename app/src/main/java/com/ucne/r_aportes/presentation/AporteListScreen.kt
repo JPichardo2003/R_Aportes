@@ -11,13 +11,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.ucne.r_aportes.data.local.entities.AporteEntity
 
@@ -27,6 +34,8 @@ fun AporteListScreen(
     onVerAporte: (AporteEntity) -> Unit,
     onDeleteAporte: (AporteEntity) -> Unit
 ) {
+    var showDialog by remember { mutableStateOf(false) }
+    var aporteToDelete by remember { mutableStateOf<AporteEntity?>(null) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -66,7 +75,8 @@ fun AporteListScreen(
                     Text(text = aporte.observacion.toString(), modifier = Modifier.weight(0.40f))
 
                     IconButton(
-                        onClick = { onDeleteAporte(aporte)
+                        onClick = { aporteToDelete = aporte
+                            showDialog = true
                         }
                     ) {
                         Icon(
@@ -77,5 +87,28 @@ fun AporteListScreen(
                 }
             }
         }
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Eliminar Aporte") },
+            text = { Text("¿Está seguro de que desea eliminar este aporte?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDeleteAporte(aporteToDelete!!)
+                        showDialog = false
+                    }
+                ) {
+                    Text("Sí")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) {
+                    Text("Cancelar")
+                }
+            },
+        )
     }
 }
