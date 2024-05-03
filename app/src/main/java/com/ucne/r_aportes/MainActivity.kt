@@ -1,6 +1,8 @@
 package com.ucne.r_aportes
 
+import android.app.DatePickerDialog
 import android.os.Bundle
+import android.widget.DatePicker
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,13 +17,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerFormatter
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
@@ -29,6 +41,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key.Companion.Calendar
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,16 +55,16 @@ import com.ucne.r_aportes.ui.theme.R_AportesTheme
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-import java.lang.String.format
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
     private lateinit var aporteDb: AporteDb
     var aporte: AporteEntity = AporteEntity()
 
     private var showDialog by mutableStateOf(false)
-
+    private var showDatePicker by mutableStateOf(false)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -80,6 +94,7 @@ class MainActivity : ComponentActivity() {
                         var observacion by remember { mutableStateOf("") }
                         var monto by remember { mutableDoubleStateOf(0.0) }
                         var aporteId by remember { mutableStateOf("") }
+                        var fecha by remember { mutableStateOf(LocalDate.now()) }
 
                         ElevatedCard(
                             modifier = Modifier.fillMaxWidth()
@@ -92,17 +107,34 @@ class MainActivity : ComponentActivity() {
 
                                 OutlinedTextField(
                                     label = { Text(text = "Fecha") },
-                                    value = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")).toString(),
+                                    value = fecha.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
                                     readOnly = true,
                                     onValueChange = { },
+                                    trailingIcon = {
+                                        IconButton(
+                                            onClick = {
+                                                showDatePicker = true
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.DateRange,
+                                                contentDescription = "Date Picker"
+                                            )
+                                        }
+                                    },
                                     modifier = Modifier.fillMaxWidth()
                                 )
-
 
                                 OutlinedTextField(
                                     label = { Text(text = "Persona") },
                                     value = persona,
                                     onValueChange = { persona = it },
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = "Campo Persona"
+                                        )
+                                    },
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
@@ -110,6 +142,12 @@ class MainActivity : ComponentActivity() {
                                     label = { Text(text = "Observación") },
                                     value = observacion,
                                     onValueChange = { observacion = it },
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Info,
+                                            contentDescription = "Observación"
+                                        )
+                                    },
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
@@ -118,6 +156,12 @@ class MainActivity : ComponentActivity() {
                                     value = monto.toString(),
                                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                                     onValueChange = { monto = it.toDouble() },
+                                    trailingIcon = {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.icons8dollarblack),
+                                            contentDescription = "Aporte realizado"
+                                        )
+                                    },
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 Spacer(modifier = Modifier.padding(2.dp))
@@ -128,9 +172,11 @@ class MainActivity : ComponentActivity() {
                                 ) {
                                     OutlinedButton(
                                         onClick = {
+                                            aporteId = ""
                                             persona = ""
                                             observacion = ""
                                             monto = 0.0
+                                            fecha = LocalDate.now()
                                         }
                                     ) {
                                         Icon(
@@ -145,7 +191,7 @@ class MainActivity : ComponentActivity() {
                                                 saveAporte(
                                                     AporteEntity(
                                                         aporteId = aporteId.toIntOrNull(),
-                                                        fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")).toString(),
+                                                        fecha = fecha.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")).toString(),
                                                         persona = persona,
                                                         observacion = observacion,
                                                         monto = monto
@@ -154,6 +200,7 @@ class MainActivity : ComponentActivity() {
                                                 persona = ""
                                                 observacion = ""
                                                 monto = 0.0
+                                                fecha = LocalDate.now()
                                             }
                                             //showDialog = true
                                         }
@@ -178,18 +225,32 @@ class MainActivity : ComponentActivity() {
                                 persona = aporteSeleccionado.persona.toString()
                                 observacion = aporteSeleccionado.observacion.toString()
                                 monto = aporteSeleccionado.monto!!
+                                fecha = LocalDate.parse(aporteSeleccionado.fecha, DateTimeFormatter.ofPattern("MM/dd/yyyy"))
                             },
                             onDeleteAporte = { aporte ->
                                 deleteAporte(aporte)
                             }
                         )
+
+                        if(showDatePicker){
+                            val day: Int = fecha.dayOfMonth
+                            val month: Int = fecha.monthValue - 1
+                            val year: Int = fecha.year
+
+                            val datePickerDialog = DatePickerDialog(
+                                this@MainActivity, { _: DatePicker, year: Int, month: Int, day: Int ->
+                                    val selectedDate = LocalDate.of(year, month + 1, day)
+                                    fecha = selectedDate
+                                }, year, month, day
+                            )
+                            datePickerDialog.show()
+                            showDatePicker = false
+                        }
                     }
                 }
             }
         }
     }
-
-
     private fun notification(message: String) {
         Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
     }
@@ -232,17 +293,3 @@ class MainActivity : ComponentActivity() {
         return aporteDb.aporteDao().getAll()
     }
 }
-
-@Preview
-@Composable
-fun DateInputPreview() {
-    val selectedDate = LocalDate.now()
-    OutlinedTextField(
-        label = { Text(text = "Fecha") },
-        value = selectedDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")),
-        readOnly = true,
-        onValueChange = { },
-        modifier = Modifier.fillMaxWidth()
-    )
-}
-
