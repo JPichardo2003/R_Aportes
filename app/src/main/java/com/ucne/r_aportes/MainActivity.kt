@@ -30,15 +30,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.key.Key.Companion.Calendar
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.room.Room
@@ -46,18 +44,21 @@ import com.ucne.r_aportes.data.local.database.AporteDb
 import com.ucne.r_aportes.data.local.entities.AporteEntity
 import com.ucne.r_aportes.presentation.AporteListScreen
 import com.ucne.r_aportes.ui.theme.R_AportesTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
 class MainActivity : ComponentActivity() {
+
     private lateinit var aporteDb: AporteDb
     var aporte: AporteEntity = AporteEntity()
-
     private var showDialog by mutableStateOf(false)
+    var totalMonto: AporteEntity by mutableStateOf(AporteEntity())
     private var showDatePicker by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -97,7 +98,6 @@ class MainActivity : ComponentActivity() {
                                     .fillMaxWidth()
                                     .padding(8.dp)
                             ) {
-
                                 OutlinedTextField(
                                     label = { Text(text = "Fecha") },
                                     value = fecha.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")),
@@ -115,13 +115,15 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
                                     },
-                                    modifier = Modifier.fillMaxWidth().clickable(onClick = {showDatePicker = true})
+                                    modifier = Modifier.fillMaxWidth().clickable(onClick = { showDatePicker = true })
                                 )
 
                                 OutlinedTextField(
                                     label = { Text(text = "Persona") },
                                     value = persona,
                                     onValueChange = { persona = it },
+                                    //isError = persona.isEmpty() || !persona.matches(Regex("[a-zA-Z ]+")),
+                                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                                     trailingIcon = {
                                         Icon(
                                             imageVector = Icons.Default.Person,
@@ -135,6 +137,7 @@ class MainActivity : ComponentActivity() {
                                     label = { Text(text = "Observación") },
                                     value = observacion,
                                     onValueChange = { observacion = it },
+                                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                                     trailingIcon = {
                                         Icon(
                                             imageVector = Icons.Default.Info,
@@ -147,8 +150,16 @@ class MainActivity : ComponentActivity() {
                                 OutlinedTextField(
                                     label = { Text(text = "Monto") },
                                     value = monto.toString().replace("null", ""),
-                                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                                    onValueChange = { monto = it.toDoubleOrNull() },
+                                    placeholder = { Text(text = "0.0") },
+                                    prefix = { Text(text = "$") },
+                                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                                    onValueChange = {
+                                        // R.E para permitir solo dígitos
+                                        val regex = Regex("[0-9]*\\.?[0-9]*")
+                                        if (it.matches(regex)) {
+                                            monto = it.toDoubleOrNull() ?: 0.0
+                                        }
+                                    },
                                     trailingIcon = {
                                         Icon(
                                             painter = painterResource(id = R.drawable.icons8dollarblack),
@@ -207,6 +218,11 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
+                            //get All Montos start
+                            montosSum(totalMonto)
+                            Text(text = "Total Aportes: $${totalMonto.monto}")
+                            //get All Montos end
+
                         }
 
                         Spacer(modifier = Modifier.padding(2.dp))
@@ -222,6 +238,7 @@ class MainActivity : ComponentActivity() {
                             },
                             onDeleteAporte = { aporte ->
                                 deleteAporte(aporte)
+                                montosSum(totalMonto)
                             }
                         )
 
@@ -268,6 +285,24 @@ class MainActivity : ComponentActivity() {
             notification("Complete los campos correctamente")
         }
         return pass
+    }
+
+//    @Composable
+//    private fun MontoSum(totalMonto: MutableDoubleState) {
+//        LaunchedEffect(Unit) {
+//            totalMonto.doubleValue = withContext(Dispatchers.IO) {
+//                aporteDb.aporteDao().getAllMontos().sum()
+//            }
+//        }
+//        Text(text = "Total Aportes: ${totalMonto.doubleValue}")
+//    }
+
+    fun montosSum(totalMonto: AporteEntity) {
+        GlobalScope.launch{
+            totalMonto.monto = withContext(Dispatchers.IO) {
+                aporteDb.aporteDao().getAllMontos().sum()
+            }
+        }
     }
     fun saveAporte(aporte: AporteEntity) {
         GlobalScope.launch {
