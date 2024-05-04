@@ -27,4 +27,8 @@ interface AporteDao {
 
     @Query("SELECT * FROM Aportes")
     fun getAll(): Flow<List<AporteEntity>>
+
+    @Query("SELECT monto FROM Aportes")
+    suspend fun getAllMontos(): List<Double>
+
 }
