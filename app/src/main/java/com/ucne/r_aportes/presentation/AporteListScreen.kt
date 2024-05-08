@@ -47,7 +47,7 @@ fun AporteListScreen(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            //Text(text = "ID", modifier = Modifier.weight(0.10f))
+            Text(text = "ID", modifier = Modifier.weight(0.10f))
             //Text(text = "Fecha", modifier = Modifier.weight(0.40f))
             Text(text = "Persona", modifier = Modifier.weight(0.300f))
             Text(text = "Monto", modifier = Modifier.weight(0.25f))
@@ -68,7 +68,7 @@ fun AporteListScreen(
                         .clickable { onVerAporte(aporte) }
                         .padding(16.dp)
                 ) {
-                    //Text(text = aporte.aporteId.toString(), modifier = Modifier.weight(0.10f))
+                    Text(text = aporte.aporteId.toString(), modifier = Modifier.weight(0.15f))
                     //Text(text = aporte.fecha.toString(), modifier = Modifier.weight(0.400f))
                     Text(text = aporte.persona.toString(), modifier = Modifier.weight(0.395f))
                     Text(text = aporte.monto.toString(), modifier = Modifier.weight(0.35f))
