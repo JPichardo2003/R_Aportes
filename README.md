@@ -4,7 +4,8 @@ Con funciones prácticas como guardar, modificar y Eliminar Aportes, esta app pe
 
 ## **Desarollador**
 Julio Cesar Pichardo Barranco 
-![ProfilePicture](https://github.com/JPichardo2003/R_Aportes/assets/139656353/bc47cacd-d5d0-401d-b73a-2e8352a40207)
+<img align="center" src="https://user-images.githubusercontent.com/88904952/234981169-2dd1e58f-4b7e-468c-8213-034ba62156c3.png" alt="instagram" height="100" width="100" />
+
 
 # Contactame
 <p align="center">
